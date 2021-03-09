@@ -33,12 +33,12 @@ public class MainControl {
 
     public void control() {
         display.setVisible(true);
-        //not resizable form
+
         display.setResizable(false);
         addCourse.setResizable(false);
         searchCourse.setResizable(false);
         listCourse.setResizable(false);
-        //not editable in result lable after search
+
         searchCourse.getTxtName().setEditable(false);
         searchCourse.getTxtCredit().setEditable(false);
 
@@ -48,12 +48,11 @@ public class MainControl {
         setEventSearch();
         setEventDisplayCourses();
     }
-    //for button
+
     public void setEventAllButton() {
-        //Hide frame Menu and display frame fuctions
         display.getBtnAdd().addActionListener((evt) -> {
-            addCourse.setVisible(true);
             display.setVisible(false);
+            addCourse.setVisible(true);
         });
         display.getBtnSeach().addActionListener((evt) -> {
             searchCourse.setVisible(true);
@@ -64,15 +63,13 @@ public class MainControl {
             display.setVisible(false);
         });
     }
-    //for frame
+
     public void setEventControlExit() {
-        //display menuFrame when close fuctionFrame
         listCourse.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 display.setVisible(true);
             }
-            
         });
         searchCourse.addWindowListener(new WindowAdapter() {
             @Override
@@ -100,10 +97,10 @@ public class MainControl {
 
             if (canAddCourse(code, name, credit)) {
                 list.add(new Courses(code, processString(name), Integer.parseInt(credit)));
+
                 clearText();
-            } else {
-                JOptionPane.showMessageDialog(addCourse, "Wrong input !!!", "Error", 2);
             }
+
             list.forEach((courses) -> {
                 System.out.println(courses.toString());
             });
@@ -120,16 +117,23 @@ public class MainControl {
         addCourse.getTxtCredit().setText("");
     }
 
-    //check empty from code, name and credit
     public boolean canAddCourse(String code, String name, String credit) {
         boolean resoult = true;
 
         if (code.isEmpty() || name.isEmpty() || credit.isEmpty()) {
+            JOptionPane.showMessageDialog(addCourse, "Code/name/credit can not empty", "Can not add", 2);
+            resoult = false;
+        } else if (checkCode(code) >= 0) {
+            JOptionPane.showMessageDialog(addCourse, "This code is already exited!!!", "Can not add", 2);
             resoult = false;
         } else {
             try {
-                Integer.parseInt(credit);
+                if(Integer.parseInt(credit) < 0 || Integer.parseInt(credit) > 33){
+                    JOptionPane.showMessageDialog(addCourse, "Credit must be >= 0 and <= 33", "Can not add", 2);
+                    resoult = false;
+                }
             } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(addCourse, "Credit must be a number", "Can not add", 2);
                 resoult = false;
             }
         }
@@ -137,7 +141,6 @@ public class MainControl {
         return resoult;
     }
 
-    //format name
     public String processString(String temp) {
         temp = temp.trim();
         String[] tmp = temp.split("\\s+");
@@ -145,37 +148,37 @@ public class MainControl {
 
         for (int i = 0; i < tmp.length; i++) {
             if (tmp[i].equals("and")) {
-                continue;
-            }
-
-            int index = 0;
-            while ((String.valueOf(tmp[i].charAt(index)).matches("\\W"))) {
-                if (index == tmp[i].length() - 1) {
-                    break;
+                finalString += " and";
+            } else {
+                int index = 0;
+                while ((String.valueOf(tmp[i].charAt(index)).matches("\\W"))) {
+                    if (index == tmp[i].length() - 1) {
+                        break;
+                    }
+                    index++;
                 }
-                index++;
+
+                String first = tmp[i].substring(0, index + 1).toUpperCase();
+                String second = tmp[i].substring(index + 1).toLowerCase();
+
+                tmp[i] = (i != 0 ? " " : "") + first + second;
+                finalString += tmp[i];
             }
-
-            String first = tmp[i].substring(0, index + 1).toUpperCase();
-            System.out.println(first);
-            String second = tmp[i].substring(index + 1).toLowerCase();
-
-            tmp[i] = (i != 0 ? " " : "") + first + second;
-            finalString += tmp[i];
         }
-
         return finalString;
     }
 
     public void setEventSearch() {
         searchCourse.getBtnSearch().addActionListener((evt) -> {
             String code = searchCourse.getTxtCode().getText();
-
-            for (Courses courses : list) {
-                if (courses.getCode().equals(code)) {
-                    searchCourse.getTxtName().setText(courses.getName());
-                    searchCourse.getTxtCredit().setText(courses.getCredit() + "");
-                }
+            int index = checkCode(code);
+            if (checkEmpty(code)) {
+                JOptionPane.showMessageDialog(searchCourse, "Code can not be empty!!!", "Empty", 2);
+            } else if (index < 0) {
+                JOptionPane.showMessageDialog(searchCourse, "This code does not exist in the list!!!", "Not found", 2);
+            } else {
+                searchCourse.getTxtName().setText(list.get(index).getName());
+                searchCourse.getTxtCredit().setText(list.get(index).getCredit() + "");
             }
         });
     }
@@ -184,9 +187,27 @@ public class MainControl {
         display.getBtnDisplay().addActionListener((evt) -> {
             list.sort((Courses o1, Courses o2) -> o1.getCredit() - o2.getCredit());
             list.forEach((temp) -> {
-                System.out.println(temp);
+                listCourse.getTxtDisplay().append(temp.toString() + "\n");
             });
         });
+    }
+
+    //check code is exist in the list
+    public int checkCode(String code) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).getCode().equals(code)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    //check code is empty
+    public boolean checkEmpty(String s) {
+        if (s.isEmpty()) {
+            return true;
+        }
+        return false;
     }
 
     public static void main(String[] args) {
