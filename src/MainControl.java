@@ -2,19 +2,8 @@
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import javax.swing.JOptionPane;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-/**
- *
- * @author nmtun
- */
 public class MainControl {
 
     MainDisplay display;
@@ -22,6 +11,7 @@ public class MainControl {
     SearchCourse searchCourse;
     ListCourse listCourse;
 
+    //array để lưu danh sách course
     ArrayList<Courses> list = new ArrayList<>();
 
     public MainControl(MainDisplay display, AddCourse addCourse, SearchCourse searchCourse, ListCourse listCourse) {
@@ -34,13 +24,16 @@ public class MainControl {
     public void control() {
         display.setVisible(true);
 
+        //không thay đổi kích frame 
         display.setResizable(false);
         addCourse.setResizable(false);
         searchCourse.setResizable(false);
         listCourse.setResizable(false);
 
+        //không edit 
         searchCourse.getTxtName().setEditable(false);
         searchCourse.getTxtCredit().setEditable(false);
+        listCourse.getTxtDisplay().setEditable(false);
 
         setEventAllButton();
         setEventControlExit();
@@ -49,6 +42,7 @@ public class MainControl {
         setEventDisplayCourses();
     }
 
+    //set even cho btn chức năng ở frame chính
     public void setEventAllButton() {
         display.getBtnAdd().addActionListener((evt) -> {
             display.setVisible(false);
@@ -64,6 +58,7 @@ public class MainControl {
         });
     }
 
+    //set even cho exit
     public void setEventControlExit() {
         listCourse.addWindowListener(new WindowAdapter() {
             @Override
@@ -97,7 +92,6 @@ public class MainControl {
 
             if (canAddCourse(code, name, credit)) {
                 list.add(new Courses(code, processString(name), Integer.parseInt(credit)));
-
                 clearText();
             }
 
@@ -117,33 +111,33 @@ public class MainControl {
         addCourse.getTxtCredit().setText("");
     }
 
+    //kiểm tra data add vào 
     public boolean canAddCourse(String code, String name, String credit) {
-        boolean resoult = true;
-
+        //check isEmpty 
         if (code.isEmpty() || name.isEmpty() || credit.isEmpty()) {
             JOptionPane.showMessageDialog(addCourse, "Code/name/credit can not empty", "Can not add", 2);
-            resoult = false;
-        } else if (checkCode(code) >= 0) {
+            return false;
+        } else if (checkCode(code) >= 0) {//check code đã tồn tại trong list chưa?
             JOptionPane.showMessageDialog(addCourse, "This code is already exited!!!", "Can not add", 2);
-            resoult = false;
+            return false;
         } else {
             try {
-                if(Integer.parseInt(credit) < 0 || Integer.parseInt(credit) > 33){
+                if (Integer.parseInt(credit) < 0 || Integer.parseInt(credit) > 33) {
                     JOptionPane.showMessageDialog(addCourse, "Credit must be >= 0 and <= 33", "Can not add", 2);
-                    resoult = false;
+                    return false;
                 }
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(addCourse, "Credit must be a number", "Can not add", 2);
-                resoult = false;
+                return false;
             }
         }
-
-        return resoult;
+        return true;
     }
 
+    //format name
     public String processString(String temp) {
-        temp = temp.trim();
-        String[] tmp = temp.split("\\s+");
+        temp = temp.trim();//xóa dấu ' ' 2 đầu 
+        String[] tmp = temp.split("\\s+");//Java and Core
         String finalString = "";
 
         for (int i = 0; i < tmp.length; i++) {
@@ -151,15 +145,17 @@ public class MainControl {
                 finalString += " and";
             } else {
                 int index = 0;
-                while ((String.valueOf(tmp[i].charAt(index)).matches("\\W"))) {
+                //vd: java .net
+                while ((String.valueOf(tmp[i].charAt(index)).matches("\\W"))) {// //W!(a-z0-9)-> thoát khỏi vòng lặp khi gặp kí tự (a-z/0-9), và ngược lại
                     if (index == tmp[i].length() - 1) {
                         break;
                     }
                     index++;
                 }
 
-                String first = tmp[i].substring(0, index + 1).toUpperCase();
-                String second = tmp[i].substring(index + 1).toLowerCase();
+                
+                String first = tmp[i].substring(0, index + 1).toUpperCase();//viết hoa 
+                String second = tmp[i].substring(index + 1).toLowerCase();//viết thường
 
                 tmp[i] = (i != 0 ? " " : "") + first + second;
                 finalString += tmp[i];
@@ -169,9 +165,9 @@ public class MainControl {
     }
 
     public void setEventSearch() {
-        searchCourse.getBtnSearch().addActionListener((evt) -> {
-            String code = searchCourse.getTxtCode().getText();
-            int index = checkCode(code);
+        searchCourse.getBtnSearch().addActionListener((evt) -> {//set even
+            String code = searchCourse.getTxtCode().getText();//lấy data
+            int index = checkCode(code);//check code đã tồn tại hay chưa
             if (checkEmpty(code)) {
                 JOptionPane.showMessageDialog(searchCourse, "Code can not be empty!!!", "Empty", 2);
             } else if (index < 0) {
@@ -184,7 +180,7 @@ public class MainControl {
     }
 
     public void setEventDisplayCourses() {
-        display.getBtnDisplay().addActionListener((evt) -> {
+        display.getBtnDisplay().addActionListener((evt) -> {//set event
             list.sort((Courses o1, Courses o2) -> o1.getCredit() - o2.getCredit());
             list.forEach((temp) -> {
                 listCourse.getTxtDisplay().append(temp.toString() + "\n");
@@ -194,12 +190,12 @@ public class MainControl {
 
     //check code is exist in the list
     public int checkCode(String code) {
-        for (int i = 0; i < list.size(); i++) {
-            if (list.get(i).getCode().equals(code)) {
-                return i;
+        for (int i = 0; i < list.size(); i++) {//duyệt list ban đầu
+            if (list.get(i).getCode().equals(code)) {//so sánh 
+                return i;///return vị trí code truyền vào nằm trong list
             }
         }
-        return -1;
+        return -1;//nếu không có trả về -1
     }
 
     //check code is empty
